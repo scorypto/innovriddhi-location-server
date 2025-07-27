@@ -1,4 +1,4 @@
-# InnoVd Location Tracking System
+# InnoVriddhi Location Tracking System
 
 A comprehensive architecture and documentation repository for building a world-class location tracking platform that handles real-time field force management at scale.
 
@@ -85,7 +85,7 @@ This is a documentation repository. For implementation repositories, please refe
 
 ## 📄 License
 
-Copyright © 2024 InnoVd. All rights reserved.
+Copyright © 2024 InnoVriddhi. All rights reserved.
 
 ---
 

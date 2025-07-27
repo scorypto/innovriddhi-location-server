@@ -12,7 +12,7 @@
 ## 1. Current System Design
 
 ### Overview
-The InnoVd location tracking system is a comprehensive solution for real-time field force management, built on a modern Node.js/TypeScript stack with MongoDB for persistence and MQTT for real-time data ingestion.
+The InnoVriddhi location tracking system is a comprehensive solution for real-time field force management, built on a modern Node.js/TypeScript stack with MongoDB for persistence and MQTT for real-time data ingestion.
 
 ### Technology Stack
 - **Backend**: Node.js with TypeScript, Koa.js framework

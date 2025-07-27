@@ -105,7 +105,7 @@ class MQTTLocationManager {
 ```yaml
 # pubspec.yaml
 name: innovd_app
-description: InnoVd Location Tracking App
+description: InnoVriddhi Location Tracking App
 
 dependencies:
   flutter:

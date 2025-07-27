@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is the InnoVd Location Tracking system architecture and documentation repository. It contains comprehensive technical documentation for building a world-class location tracking platform that handles real-time field force management at scale.
+This is the InnoVriddhi Location Tracking system architecture and documentation repository. It contains comprehensive technical documentation for building a world-class location tracking platform that handles real-time field force management at scale.
 
 ## Key Architecture Documents
 
@@ -113,3 +113,7 @@ The system is designed for gradual migration:
 - The system is designed for Singapore region (asia-southeast1) with DR in Mumbai (asia-south1)
 - Cost estimates are based on Google Cloud Platform Singapore pricing
 - All code examples are illustrative and need proper error handling in production
+
+## Naming Conventions
+
+- Project name everywhere must be InnoVriddhi instead of InnoVd

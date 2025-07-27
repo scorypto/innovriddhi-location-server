@@ -843,8 +843,8 @@ const PredictiveDashboard: React.FC = () => {
 ```typescript
 // PWA configuration
 const PWAConfig = {
-  name: 'InnoVd Tracking',
-  short_name: 'InnoVd',
+  name: 'InnoVriddhi Tracking',
+  short_name: 'InnoVriddhi',
   description: 'Real-time location tracking dashboard',
   theme_color: '#1976d2',
   background_color: '#ffffff',
