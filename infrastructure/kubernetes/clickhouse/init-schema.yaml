@@ -1,0 +1,113 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: clickhouse-init-schema
+  namespace: clickhouse
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: clickhouse-client
+        image: clickhouse/clickhouse-server:24.8-alpine
+        command:
+        - /bin/sh
+        - -c
+        - |
+          until clickhouse-client --host clickhouse-svc --user innovriddhi --password 123456 --query "SELECT 1"; do
+            echo "Waiting for ClickHouse to be ready..."
+            sleep 5
+          done
+          
+          echo "Creating location_tracking database..."
+          clickhouse-client --host clickhouse-svc --user innovriddhi --password 123456 --query "
+          CREATE DATABASE IF NOT EXISTS location_tracking;"
+          
+          echo "Creating locations table..."
+          clickhouse-client --host clickhouse-svc --user innovriddhi --password 123456 --query "
+          CREATE TABLE IF NOT EXISTS location_tracking.locations (
+              timestamp DateTime64(3),
+              date Date DEFAULT toDate(timestamp),
+              company_id String,
+              user_id String,
+              latitude Float64,
+              longitude Float64,
+              accuracy Float32,
+              altitude Nullable(Float32),
+              speed Nullable(Float32),
+              heading Nullable(Float32),
+              activity_type Nullable(String),
+              battery_level Nullable(Float32),
+              is_moving UInt8 DEFAULT 0,
+              is_charging UInt8 DEFAULT 0,
+              odometer Nullable(Float32),
+              event_type String DEFAULT 'location_update',
+              geofence_ids Array(String) DEFAULT [],
+              metadata String DEFAULT '{}'
+          ) ENGINE = MergeTree()
+          PARTITION BY toYYYYMM(date)
+          ORDER BY (company_id, user_id, timestamp)
+          TTL date + INTERVAL 90 DAY
+          SETTINGS index_granularity = 8192;"
+          
+          echo "Creating stoppages table..."
+          clickhouse-client --host clickhouse-svc --user innovriddhi --password 123456 --query "
+          CREATE TABLE IF NOT EXISTS location_tracking.stoppages (
+              start_time DateTime64(3),
+              end_time DateTime64(3),
+              date Date DEFAULT toDate(start_time),
+              company_id String,
+              user_id String,
+              latitude Float64,
+              longitude Float64,
+              duration_seconds UInt32,
+              address Nullable(String),
+              reason Nullable(String),
+              metadata String DEFAULT '{}'
+          ) ENGINE = MergeTree()
+          PARTITION BY toYYYYMM(date)
+          ORDER BY (company_id, user_id, start_time)
+          TTL date + INTERVAL 90 DAY;"
+          
+          echo "Creating location aggregates materialized view..."
+          clickhouse-client --host clickhouse-svc --user innovriddhi --password 123456 --query "
+          CREATE MATERIALIZED VIEW IF NOT EXISTS location_tracking.locations_5min_mv
+          ENGINE = AggregatingMergeTree()
+          PARTITION BY toYYYYMM(date)
+          ORDER BY (company_id, user_id, interval_start)
+          AS
+          SELECT
+              toStartOfFiveMinutes(timestamp) AS interval_start,
+              toDate(interval_start) AS date,
+              company_id,
+              user_id,
+              avg(latitude) AS avg_latitude,
+              avg(longitude) AS avg_longitude,
+              avg(speed) AS avg_speed,
+              max(speed) AS max_speed,
+              count() AS location_count,
+              sum(toUInt32(is_moving)) AS moving_count,
+              avg(battery_level) AS avg_battery
+          FROM location_tracking.locations
+          GROUP BY interval_start, date, company_id, user_id;"
+          
+          echo "Creating daily stats materialized view..."
+          clickhouse-client --host clickhouse-svc --user innovriddhi --password 123456 --query "
+          CREATE MATERIALIZED VIEW IF NOT EXISTS location_tracking.daily_stats_mv
+          ENGINE = SummingMergeTree()
+          PARTITION BY toYYYYMM(date)
+          ORDER BY (date, company_id, user_id)
+          AS
+          SELECT
+              date,
+              company_id,
+              user_id,
+              count() AS total_points,
+              sum(toUInt32(is_moving)) AS moving_points,
+              uniqExact(toStartOfHour(timestamp)) AS active_hours,
+              min(timestamp) AS first_location,
+              max(timestamp) AS last_location
+          FROM location_tracking.locations
+          GROUP BY date, company_id, user_id;"
+          
+          echo "Schema initialization complete!"
